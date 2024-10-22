@@ -1,0 +1,20 @@
+services:
+  db:
+    container_name: db
+    image: gvenzl/oracle-xe:21.3.0-slim
+    environment:
+      - ORACLE_DATABASE=DB
+      - ORACLE_PASSWORD=oracle
+    volumes:
+      - ./data:/container-entrypoint-initdb.d
+    ports:
+      - "1521:1521"
+  backend:
+    depends_on:
+      - db
+    container_name: backend
+    build:
+      context: backend
+      dockerfile: Dockerfile
+    ports:
+        - "8080:8080"
