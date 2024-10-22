@@ -1,0 +1,50 @@
+### Date anti-patterns
+
+POST http://localhost:8080/query
+Content-Type: text/plain
+
+CREATE INDEX date_minus_time ON sales (TRUNC(sale_date))
+
+###
+
+POST http://localhost:8080/query
+Content-Type: text/plain
+
+SELECT *
+FROM sales
+WHERE sale_date BETWEEN quarter_begin(?) AND quarter_end(?)
+
+###
+
+POST http://localhost:8080/query
+Content-Type: text/plain
+
+SELECT *
+FROM sales
+WHERE sale_date = TO_DATE('2024-10-15', 'YYYY-MM-DD')
+
+### Numeric Strings anti-patterns
+
+POST http://localhost:8080/query
+Content-Type: text/plain
+
+SELECT *
+FROM sales
+WHERE AMOUNT = 250.50
+
+### Smart Logic anti-patterns
+
+POST http://localhost:8080/query
+Content-Type: text/plain
+
+SELECT first_name, last_name, employee_id
+FROM employees
+WHERE (employee_id = NULL OR NULL IS NULL)
+AND (UPPER(last_name) = 'DOE' OR 'DOE' IS NULL)
+
+### Math anti-patterns
+
+POST http://localhost:8080/query
+Content-Type: text/plain
+
+CREATE INDEX math ON MATH (3*a - b)
