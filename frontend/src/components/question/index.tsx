@@ -22,17 +22,21 @@ import {Toaster} from "@/components/ui/toaster.tsx";
 import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter';
 import {useToast} from "@/hooks/use-toast.ts";
 import {cn} from "@/lib/utils.ts";
+import {useState} from "react";
 
-export default function Component({id, contextQuery, defaultQuery, solutionQuery, task, resolved}: {
+export default function Component({id, contextQuery, defaultQuery, solutionQuery, task, initialResolved, onResolve}: {
     id: number,
     contextQuery?: string,
     defaultQuery: string,
     solutionQuery: string,
     task: string,
-    resolved: boolean
+    initialResolved: boolean,
+    onResolve: () => void
 }) {
+    const [resolved, setResolved] = useState(initialResolved)
+
     const schema = z.object({
-        query: z.string().min(5).max(100),
+        query: z.string().min(5).max(255),
     })
 
     const form = useForm<z.infer<typeof schema>>({
@@ -69,7 +73,8 @@ export default function Component({id, contextQuery, defaultQuery, solutionQuery
             await fetch(`${import.meta.env.VITE_BACKEND_URL}/${id}/resolve`, {
                 method: 'POST'
             })
-            resolved = true
+            setResolved(true)
+            onResolve()
         }
     }
 
