@@ -12,7 +12,7 @@ import java.util.Map;
 
 @SpringBootApplication
 @RestController
-@CrossOrigin(origins = {"http://localhost:5173", "http://frontend:3000"})
+@CrossOrigin(origins = {"http://localhost:3000", "http://frontend:3000"})
 public class BackendApplication {
     private final JdbcClient jdbcClient;
 
