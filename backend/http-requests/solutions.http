@@ -3,7 +3,7 @@
 POST http://localhost:8080/query
 Content-Type: text/plain
 
-CREATE INDEX date_minus_time ON sales (TRUNC(sale_date))
+CREATE INDEX sales_date_pure ON sales (TRUNC(sale_date))
 
 ###
 
@@ -47,4 +47,4 @@ AND (UPPER(last_name) = 'DOE' OR 'DOE' IS NULL)
 POST http://localhost:8080/query
 Content-Type: text/plain
 
-CREATE INDEX math ON MATH (3*a - b)
+SELECT * FROM sales

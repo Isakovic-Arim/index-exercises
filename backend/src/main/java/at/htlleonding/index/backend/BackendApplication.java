@@ -2,25 +2,47 @@ package at.htlleonding.index.backend;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
 
 @SpringBootApplication
 @RestController
 @CrossOrigin(origins = {"http://localhost:5173", "http://frontend:5173"})
 public class BackendApplication {
-	private JdbcClient jdbcClient;
+    private JdbcClient jdbcClient;
 
-	public BackendApplication(JdbcClient jdbcClient) {
-		this.jdbcClient = jdbcClient;
-	}
+    public BackendApplication(JdbcClient jdbcClient) {
+        this.jdbcClient = jdbcClient;
+    }
 
-	public static void main(String[] args) {
-		SpringApplication.run(BackendApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(BackendApplication.class, args);
+    }
 
-	@PostMapping("/query")
-	public String query(@RequestBody String sql) {
-		return jdbcClient.sql(sql).query().listOfRows().get(0).toString();
-	}
+    @PostMapping("/query")
+    public ResponseEntity<QueryResponse> query(@RequestBody String sql) {
+        try {
+            String sqlTrimmed = sql.trim().toUpperCase();
+            if (sqlTrimmed.startsWith("SELECT")) {
+                List<Map<String, Object>> result = jdbcClient.sql(sql).query().listOfRows();
+                return ResponseEntity.ok(new QueryResponse(result, "success"));
+            } else {
+                int updatedCount = jdbcClient.sql(sql).update();
+                return ResponseEntity.ok(
+                        new QueryResponse(
+                                "Query executed successfully " + updatedCount + " row(s) affected",
+                                "success"
+                        )
+                );
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new QueryResponse("Error executing query: " + e.getMessage(), "error"));
+        }
+    }
 }

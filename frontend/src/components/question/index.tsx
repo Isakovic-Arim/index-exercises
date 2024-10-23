@@ -39,14 +39,16 @@ export default function Component({contextQuery, defaultQuery, task}: {
                 'Content-Type': 'text/plain',
             },
             body: values.query
-        }).then(response => response.json())
-            .then((data) => {
-                console.log(data)
-                toast({
-                    title: 'Query executed',
-                })
-            })
-            .catch(() => {
+        }).then(res => res.json())
+            .then(data => {
+                if (data.status === 'error') {
+                    throw new Error();
+                } else {
+                    toast({
+                        title: 'Query executed',
+                    })
+                }
+            }).catch(() => {
                 toast({
                     title: 'Query failed',
                     description: "The answer does not seem to be quite right.",
@@ -55,7 +57,7 @@ export default function Component({contextQuery, defaultQuery, task}: {
             })
     }
 
-    const { toast } = useToast()
+    const {toast} = useToast()
 
     return (
         <li className='h-screen w-full grid place-items-center'>
@@ -85,7 +87,7 @@ export default function Component({contextQuery, defaultQuery, task}: {
                     <Button type="submit">Submit</Button>
                 </form>
             </Form>
-            <Toaster />
+            <Toaster/>
         </li>
     )
 }
