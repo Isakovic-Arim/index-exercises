@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 @SpringBootApplication
 @RestController
+@CrossOrigin(origins = {"http://localhost:5173", "http://frontend:5173"})
 public class BackendApplication {
 	private JdbcClient jdbcClient;
 
