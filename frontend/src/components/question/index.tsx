@@ -12,14 +12,24 @@ import {
     FormDescription,
     FormMessage
 } from "@/components/ui/form.tsx";
-import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter';
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger
+} from "@/components/ui/accordion.tsx";
 import {Toaster} from "@/components/ui/toaster.tsx";
+import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter';
 import {useToast} from "@/hooks/use-toast.ts";
+import {cn} from "@/lib/utils.ts";
 
-export default function Component({contextQuery, defaultQuery, task}: {
+export default function Component({id, contextQuery, defaultQuery, solutionQuery, task, resolved}: {
+    id: number,
     contextQuery?: string,
     defaultQuery: string,
-    task: string
+    solutionQuery: string,
+    task: string,
+    resolved: boolean
 }) {
     const schema = z.object({
         query: z.string().min(5).max(100),
@@ -55,6 +65,12 @@ export default function Component({contextQuery, defaultQuery, task}: {
                     variant: 'destructive'
                 })
             })
+        if (values.query.toLowerCase() === solutionQuery.toLowerCase()) {
+            await fetch(`${import.meta.env.VITE_BACKEND_URL}/${id}/resolve`, {
+                method: 'POST'
+            })
+            resolved = true
+        }
     }
 
     const {toast} = useToast()
@@ -62,7 +78,8 @@ export default function Component({contextQuery, defaultQuery, task}: {
     return (
         <li className='h-screen w-full grid place-items-center'>
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                <form onSubmit={form.handleSubmit(onSubmit)}
+                      className={cn("space-y-8 p-20 rounded-lg", resolved && 'border-2 border-green-500')}>
                     <FormField
                         control={form.control}
                         name="query"
@@ -84,7 +101,19 @@ export default function Component({contextQuery, defaultQuery, task}: {
                             </FormItem>
                         )}
                     />
-                    <Button type="submit">Submit</Button>
+                    <div className='flex items-center gap-4'>
+                        <Button type="submit" disabled={resolved}>Submit</Button>
+                        <Accordion type='single' collapsible>
+                            <AccordionItem value="solution">
+                                <AccordionTrigger>Solution</AccordionTrigger>
+                                <AccordionContent>
+                                    <SyntaxHighlighter language='sql'>
+                                        {solutionQuery}
+                                    </SyntaxHighlighter>
+                                </AccordionContent>
+                            </AccordionItem>
+                        </Accordion>
+                    </div>
                 </form>
             </Form>
             <Toaster/>

@@ -14,7 +14,7 @@ import java.util.Map;
 @RestController
 @CrossOrigin(origins = {"http://localhost:5173", "http://frontend:5173"})
 public class BackendApplication {
-    private JdbcClient jdbcClient;
+    private final JdbcClient jdbcClient;
 
     public BackendApplication(JdbcClient jdbcClient) {
         this.jdbcClient = jdbcClient;
@@ -43,6 +43,27 @@ public class BackendApplication {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new QueryResponse("Error executing query: " + e.getMessage(), "error"));
+        }
+    }
+
+    @GetMapping("/questions")
+    public ResponseEntity<QueryResponse> getQuestions() {
+        try {
+            List<Map<String, Object>> result = jdbcClient.sql("SELECT * FROM questions").query().listOfRows();
+            return ResponseEntity.ok(new QueryResponse(result, "success"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new QueryResponse("Error executing query: " + e.getMessage(), "error"));
+        }
+    }
+
+    @PostMapping("/{id}/resolve")
+    public ResponseEntity<?> resolveQuestion(@PathVariable int id) {
+        try {
+            int updatedCount = jdbcClient.sql("UPDATE questions SET is_resolved = 1 WHERE id = " + id).update();
+            return ResponseEntity.ok("Query executed successfully " + updatedCount + " row(s) affected");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error executing query: " + e.getMessage());
         }
     }
 }

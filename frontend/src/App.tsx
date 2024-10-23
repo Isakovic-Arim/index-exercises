@@ -1,43 +1,72 @@
 import Assessment from './components/assessment'
 import Question from './components/question'
+import {useEffect, useState} from "react";
 
 function App() {
+    const [questions, setQuestions] = useState<{ ID: number, IS_RESOLVED: 0 | 1 }[]>([]);
+
+    useEffect(() => {
+        fetch(`${import.meta.env.VITE_BACKEND_URL}/questions`)
+            .then(res => res.json()).then(data => {
+            setQuestions(data.data)
+        })
+    }, []);
+
     return (
         <>
-            <Assessment>
-                <Question
-                    contextQuery="SELECT * FROM sales WHERE TRUNC(sale_date) = TRUNC(sysdate - INTERVAL '7' DAY);"
-                    defaultQuery='CREATE INDEX <index_name> ON <table_name> (<index_def>)'
-                    task='Create an index that will optimize the following query:'
-                />
-                <Question
-                    defaultQuery='CREATE INDEX <index_name> ON <table_name> (<index_def>)'
-                    task='Create an index that will optimize the following query'
-                />
-                <Question
-                    contextQuery="CREATE FUNCTION quarter_begin(dt IN DATE) RETURN DATE AS BEGIN RETURN TRUNC(dt, 'Q'); END;
+            {questions.length > 0 ?
+                <Assessment>
+                    <Question
+                        id={1}
+                        contextQuery="SELECT * FROM sales WHERE TRUNC(sale_date) = TRUNC(sysdate - INTERVAL '7' DAY);"
+                        defaultQuery='CREATE INDEX <index_name> ON <table_name> (<index_def>)'
+                        solutionQuery='CREATE INDEX sales_date_pure ON sales (TRUNC(sale_date))'
+                        task='Create an index that will optimize the following query:'
+                        resolved={questions[0].IS_RESOLVED === 1}
+                    />
+                    <Question
+                        id={2}
+                        contextQuery="CREATE FUNCTION quarter_begin(dt IN DATE) RETURN DATE AS BEGIN RETURN TRUNC(dt, 'Q'); END;
                     CREATE FUNCTION quarter_end(dt IN DATE) RETURN DATE AS BEGIN RETURN TRUNC(ADD_MONTHS(dt, +3), 'Q') - (1/(24*60*60)); END;"
-                    defaultQuery="SELECT * FROM sales WHERE sale_date >= ? AND sale_date < ? INTERVAL '1' DAY"
-                    task='Rewrite the query so that it uses the predefined quarter_begin and quarter_end functions'
-                />
-                <Question
-                    defaultQuery="SELECT * FROM sales WHERE TO_CHAR(sale_date, 'YYYY-MM-DD') = '2024-10-15'"
-                    task='Fix the anti-pattern in the query'
-                />
-                <Question
-                    defaultQuery="SELECT * FROM sales WHERE TO_NUMBER(AMOUNT) = 250.50"
-                    task='Fix the anti-pattern in the query'
-                />
-                <Question
-                    defaultQuery="SELECT first_name, last_name, employee_id FROM employees
+                        defaultQuery="SELECT * FROM sales WHERE sale_date >= ? AND sale_date < ? INTERVAL '1' DAY"
+                        solutionQuery='SELECT * FROM sales WHERE sale_date BETWEEN quarter_begin(?) AND quarter_end(?)'
+                        task='Rewrite the query so that it uses the predefined quarter_begin and quarter_end functions'
+                        resolved={questions[1].IS_RESOLVED === 1}
+                    />
+                    <Question
+                        id={3}
+                        defaultQuery="SELECT * FROM sales WHERE TO_CHAR(sale_date, 'YYYY-MM-DD') = '2024-10-15'"
+                        solutionQuery="SELECT * FROM sales WHERE sale_date = TO_DATE('2024-10-15', 'YYYY-MM-DD')"
+                        task='Fix the anti-pattern in the query'
+                        resolved={questions[2].IS_RESOLVED === 1}
+                    />
+                    <Question
+                        id={4}
+                        defaultQuery="SELECT * FROM sales WHERE TO_NUMBER(AMOUNT) = 250.50"
+                        solutionQuery='SELECT * FROM sales WHERE AMOUNT = 250.50'
+                        task='Fix the anti-pattern in the query'
+                        resolved={questions[3].IS_RESOLVED === 1}
+                    />
+                    <Question
+                        id={5}
+                        defaultQuery="SELECT first_name, last_name, employee_id FROM employees
                     WHERE (employee_id = :emp_id OR :emp_id IS NULL) AND (UPPER(last_name) = :name OR :name IS NULL)"
-                    task='Adjust the query so that the index is used instead of a full-table-scan'
-                />
-                <Question
-                    defaultQuery="CREATE INDEX <index_name> ON <table_name> (<index_def>)"
-                    task='Create an index to serve for the equation in the query: 3*a - b'
-                />
-            </Assessment>
+                        solutionQuery="SELECT first_name, last_name, employee_id
+                    FROM employees WHERE (employee_id = NULL OR NULL IS NULL)
+                    AND (UPPER(last_name) = 'DOE' OR 'DOE' IS NULL)"
+                        task='Adjust the query so that the index is used instead of a full-table-scan'
+                        resolved={questions[4].IS_RESOLVED === 1}
+                    />
+                    <Question
+                        id={6}
+                        defaultQuery="CREATE INDEX <index_name> ON <table_name> (<index_def>)"
+                        solutionQuery='CREATE INDEX math ON MATH (3*a - b)'
+                        task='Create an index to serve for the equation in the query: 3*a - b'
+                        resolved={questions[5].IS_RESOLVED === 1}
+                    />
+                </Assessment>
+                : <h1 className='text-3xl'>Loading...</h1>
+            }
         </>
     )
 }
